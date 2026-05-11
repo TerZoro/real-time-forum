@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Real-Time Forum</title>
+	<link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+	<!-- ═══════════════════════════════════════════════════════════
+			 AUTH SCREEN  (shown when not logged in)
+	═══════════════════════════════════════════════════════════ -->
+	<div id="auth-screen" class="auth-screen hidden">
+
+		<!-- LOGIN FORM -->
+		<div id="login-form" class="auth-card">
+			<h1 class="brand">Forum<span>RT</span></h1>
+			<h2>Sign in</h2>
+			<div id="login-error" class="form-error hidden"></div>
+			<form id="loginForm" novalidate>
+				<label>Nickname or Email
+					<input type="text" name="identifier" placeholder="your@email.com" required />
+				</label>
+				<label>Password
+					<input type="password" name="password" placeholder="••••••••" required />
+				</label>
+				<button type="submit" class="btn btn-primary btn-block">Sign in</button>
+			</form>
+			<p class="auth-switch">No account? <a href="#" id="go-register">Register</a></p>
+		</div>
+
+		<!-- REGISTER FORM -->
+		<div id="register-form" class="auth-card hidden">
+			<h1 class="brand">Forum<span>RT</span></h1>
+			<h2>Create account</h2>
+			<div id="register-error" class="form-error hidden"></div>
+			<form id="registerForm" novalidate>
+				<div class="form-row">
+					<label>First name
+						<input type="text" name="first_name" placeholder="John" required />
+					</label>
+					<label>Last name
+						<input type="text" name="last_name" placeholder="Doe" required />
+					</label>
+				</div>
+				<label>Nickname
+					<input type="text" name="nickname" placeholder="cool_username" required />
+				</label>
+				<label>Email
+					<input type="email" name="email" placeholder="your@email.com" required />
+				</label>
+				<div class="form-row">
+					<label>Age
+						<input type="number" name="age" placeholder="18" min="1" max="120" required />
+					</label>
+					<label>Gender
+						<select name="gender" required>
+							<option value="">Select…</option>
+							<option value="male">Male</option>
+							<option value="female">Female</option>
+							<option value="other">Other</option>
+						</select>
+					</label>
+				</div>
+				<label>Password
+					<input type="password" name="password" placeholder="••••••••" required />
+				</label>
+				<button type="submit" class="btn btn-primary btn-block">Create account</button>
+			</form>
+			<p class="auth-switch">Have an account? <a href="#" id="go-login">Sign in</a></p>
+		</div>
+
+	</div>
+
+	<!-- ═══════════════════════════════════════════════════════════
+			 APP SHELL  (shown when logged in)
+	═══════════════════════════════════════════════════════════ -->
+	<div id="app-shell" class="app-shell hidden">
+
+		<!-- TOP NAV -->
+		<header class="topnav">
+			<span class="brand">Forum<span>RT</span></span>
+			<nav class="topnav-links">
+				<a href="#feed"     class="nav-link" data-page="feed">Feed</a>
+				<a href="#new-post" class="nav-link" data-page="new-post">New Post</a>
+			</nav>
+			<div class="topnav-user">
+				<span id="nav-nickname"></span>
+				<button id="btn-logout" class="btn btn-ghost btn-sm">Logout</button>
+			</div>
+		</header>
+
+		<!-- BODY: sidebar + main content -->
+		<div class="app-body">
+
+			<!-- SIDEBAR: online users / conversations -->
+			<aside class="sidebar">
+				<h3 class="sidebar-title">Users</h3>
+				<ul id="user-list" class="user-list"></ul>
+			</aside>
+
+			<!-- MAIN CONTENT -->
+			<main class="main-content">
+
+				<!-- FEED PAGE -->
+				<section id="page-feed" class="page hidden">
+					<div class="page-header">
+						<h2>Posts</h2>
+					</div>
+					<ul id="post-list" class="post-list"></ul>
+				</section>
+
+				<!-- NEW POST PAGE -->
+				<section id="page-new-post" class="page hidden">
+					<h2>Create a post</h2>
+					<div id="new-post-error" class="form-error hidden"></div>
+					<form id="newPostForm">
+						<label>Title
+							<input type="text" name="title" placeholder="Post title…" required />
+						</label>
+						<label>Content
+							<textarea name="content" rows="8" placeholder="What's on your mind?" required></textarea>
+						</label>
+						<fieldset class="categories-fieldset">
+							<legend>Categories <span class="hint">(pick at least one)</span></legend>
+							<div id="category-list" class="category-grid"></div>
+						</fieldset>
+						<div class="form-actions">
+							<button type="submit" class="btn btn-primary">Publish</button>
+							<button type="button" class="btn btn-ghost" id="cancel-post">Cancel</button>
+						</div>
+					</form>
+				</section>
+
+				<!-- SINGLE POST PAGE -->
+				<section id="page-post" class="page hidden">
+					<button class="btn btn-ghost btn-back" id="back-to-feed">← Back to feed</button>
+					<article id="post-detail"></article>
+					<section class="comments-section">
+						<h3>Comments</h3>
+						<ul id="comment-list" class="comment-list"></ul>
+						<form id="commentForm" class="comment-form">
+							<textarea name="content" rows="3" placeholder="Write a comment…" required></textarea>
+							<button type="submit" class="btn btn-primary">Comment</button>
+						</form>
+					</section>
+				</section>
+
+				<!-- CHAT PAGE -->
+				<section id="page-chat" class="page hidden">
+					<div class="chat-wrapper">
+						<div class="chat-header">
+							<span id="chat-with-name"></span>
+							<span id="chat-with-status" class="status-dot"></span>
+						</div>
+						<div id="chat-messages" class="chat-messages"></div>
+						<div id="chat-load-more" class="chat-load-more hidden">
+							<button class="btn btn-ghost btn-sm" id="btn-load-more">Load older messages</button>
+						</div>
+						<form id="chatForm" class="chat-input-row">
+							<input type="text" id="chat-input" placeholder="Type a message…" autocomplete="off" />
+							<button type="submit" class="btn btn-primary">Send</button>
+						</form>
+					</div>
+				</section>
+
+			</main>
+		</div>
+	</div>
+
+	<!-- Scripts (order matters: ws → auth → posts → messages → app) -->
+	<script src="/static/js/websocket.js"></script>
+	<script src="/static/js/auth.js"></script>
+	<script src="/static/js/posts.js"></script>
+	<script src="/static/js/messages.js"></script>
+	<script src="/static/js/app.js"></script>
+</body>
+</html>
