@@ -7,6 +7,7 @@
  *   Auth.logout()
  *   Auth.onAuthChange(fn)   – called with (user|null) on auth state changes
  */
+
 const Auth = (() => {
 	let currentUser = null;
 	const authListeners = new Set();
@@ -18,7 +19,6 @@ const Auth = (() => {
 		authListeners.forEach(fn => fn(user));
 	}
 
-	/* ── Check existing session ── */
 	async function init() {
 		try {
 			const res = await fetch('/api/me');
@@ -33,7 +33,6 @@ const Auth = (() => {
 		}
 	}
 
-	/* ── Login form ── */
 	const loginForm = document.getElementById('loginForm');
 	const loginError = document.getElementById('login-error');
 
@@ -67,7 +66,6 @@ const Auth = (() => {
 		}
 	});
 
-	/* ── Register form ── */
 	const registerForm = document.getElementById('registerForm');
 	const registerError = document.getElementById('register-error');
 
