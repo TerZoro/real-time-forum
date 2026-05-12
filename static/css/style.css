@@ -456,8 +456,74 @@ textarea { resize: vertical; }
 }
 
 /* ── RESPONSIVE ── */
-@media (max-width: 700px) {
-	.sidebar { display: none; }
-	.main-content { padding: 16px; }
+
+/* Users button: hidden on desktop, shown on mobile */
+#btn-sidebar { display: none; }
+
+/* Tablet (≤ 900px) */
+@media (max-width: 900px) {
+	:root { --sidebar-w: 220px; }
+	.main-content { padding: 20px 22px; }
+	.post-card { padding: 16px 20px; }
+	#post-detail { padding: 20px 24px; }
+}
+
+/* Mobile (≤ 640px) */
+@media (max-width: 640px) {
+	:root { --nav-h: 52px; }
+
+	/* Topnav */
+	.topnav { padding: 0 12px; gap: 8px; }
+	.topnav .brand { font-size: 17px; }
+	.topnav-links { gap: 2px; }
+	.nav-link { padding: 6px 10px; font-size: 14px; }
+	#nav-nickname { display: none; }
+	#btn-sidebar { display: inline-flex; }
+
+	/* Sidebar becomes a fixed slide-in overlay */
+	.sidebar {
+		position: fixed;
+		top: var(--nav-h);
+		left: 0;
+		height: calc(100dvh - var(--nav-h));
+		width: 280px;
+		z-index: 200;
+		transform: translateX(-100%);
+		transition: transform .25s ease;
+		box-shadow: var(--shadow);
+	}
+	.sidebar-open .sidebar {
+		transform: translateX(0);
+	}
+
+	/* Backdrop */
+	#sidebar-overlay {
+		display: none;
+		position: fixed;
+		inset: 0;
+		background: rgba(0, 0, 0, .55);
+		z-index: 199;
+	}
+	.sidebar-open #sidebar-overlay {
+		display: block;
+	}
+
+	/* Main content */
+	.main-content { padding: 14px; }
+
+	/* Auth */
+	.auth-card { padding: 28px 18px; }
 	.form-row { grid-template-columns: 1fr; }
+
+	/* Posts */
+	.post-card { padding: 14px 16px; }
+	.post-card h3 { font-size: 16px; }
+	#post-detail { padding: 16px; }
+	#post-detail h2 { font-size: 20px; }
+
+	/* Chat — use dvh so virtual keyboard shrinks the view */
+	.chat-wrapper {
+		height: calc(100dvh - var(--nav-h) - 28px);
+	}
+	.msg-bubble { max-width: 82%; }
 }

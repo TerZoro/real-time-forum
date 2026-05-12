@@ -32,6 +32,16 @@ const App = (() => {
 		}
 	});
 
+	/* ── Mobile sidebar toggle ── */
+	const btnSidebar     = document.getElementById('btn-sidebar');
+	const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+	function _closeSidebar() { document.body.classList.remove('sidebar-open'); }
+	function _toggleSidebar() { document.body.classList.toggle('sidebar-open'); }
+
+	btnSidebar.addEventListener('click', _toggleSidebar);
+	sidebarOverlay.addEventListener('click', _closeSidebar);
+
 	async function _showApp(user) {
 		authScreen.classList.add('hidden');
 		appShell.classList.remove('hidden');
@@ -83,6 +93,7 @@ const App = (() => {
 
 	function _route() {
 		if (!_user) return;
+		_closeSidebar();
 
 		const hash = location.hash || '#feed';
 		const parts = hash.slice(1).split('/');
