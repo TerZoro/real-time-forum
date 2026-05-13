@@ -239,3 +239,17 @@ func getPostComments(postID string) []models.Comment {
 	}
 	return comments
 }
+
+func LikePost(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		jsonError(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// user, ok := GetSessionUser(r)
+	// if !ok {
+	// 	jsonError(w, "unauthorized", http.StatusUnauthorized)
+	// 	return
+	// }
+	// Still working
+}

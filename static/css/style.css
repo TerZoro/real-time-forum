@@ -377,7 +377,6 @@ textarea { resize: vertical; }
 	display: flex;
 	flex-direction: column;
 	height: calc(100vh - var(--nav-h) - 56px);
-	max-width: 800px;
 }
 
 .chat-header {
