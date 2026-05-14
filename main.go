@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"strings"
 
 	"real-time-forum/database"
 	"real-time-forum/handlers"
@@ -45,7 +46,13 @@ func main() {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		}
 	}))
-	mux.HandleFunc("/api/posts/", handlers.AuthMiddleware(handlers.GetPost))
+	mux.HandleFunc("/api/posts/", handlers.AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/like") {
+			handlers.LikePost(w, r)
+		} else {
+			handlers.GetPost(w, r)
+		}
+	}))
 	mux.HandleFunc("/api/comments", handlers.AuthMiddleware(handlers.CreateComment))
 
 	// Messages

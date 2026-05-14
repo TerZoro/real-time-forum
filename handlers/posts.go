@@ -246,10 +246,49 @@ func LikePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// user, ok := GetSessionUser(r)
-	// if !ok {
-	// 	jsonError(w, "unauthorized", http.StatusUnauthorized)
-	// 	return
-	// }
-	// Still working
+	user, ok := GetSessionUser(r)
+	if !ok {
+		jsonError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	postID := strings.TrimPrefix(r.URL.Path, "/api/posts/")
+	postID = strings.TrimSuffix(postID, "/like")
+	if postID == "" {
+		jsonError(w, "post id required", http.StatusBadRequest)
+		return
+	}
+
+	var body struct {
+		Value int `json:"value"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || (body.Value != 1 && body.Value != -1) {
+		jsonError(w, "value must be 1 or -1", http.StatusBadRequest)
+		return
+	}
+
+	var current int
+	err := database.DB.QueryRow(
+		`SELECT value FROM post_likes WHERE post_id = ? AND user_id = ?`,
+		postID, user.ID,
+	).Scan(&current)
+
+	if err == nil && current == body.Value {
+		database.DB.Exec(`DELETE FROM post_likes WHERE post_id = ? AND user_id = ?`, postID, user.ID)
+	} else {
+		database.DB.Exec(
+			`INSERT INTO post_likes (post_id, user_id, value) VALUES (?, ?, ?)
+			 ON CONFLICT (post_id, user_id) DO UPDATE SET value = excluded.value`,
+			postID, user.ID, body.Value,
+		)
+	}
+
+	var score int
+	database.DB.QueryRow(
+		`SELECT COALESCE(SUM(value), 0) FROM post_likes WHERE post_id = ?`,
+		postID,
+	).Scan(&score)
+
+	jsonOK(w, map[string]int{"score": score})
 }
