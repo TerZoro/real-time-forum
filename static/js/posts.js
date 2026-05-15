@@ -36,14 +36,21 @@ const Posts = (() => {
 		list.innerHTML = posts.map(p => `
 			<li>
 				<div class="post-card" data-id="${p.id}">
-					<h3>${escHtml(p.title)}</h3>
-					<div class="post-meta">
-						<span>by <strong>${escHtml(p.nickname)}</strong></span>
-						<span>${fmtDate(p.created_at)}</span>
+					<div class="vote-col">
+						<button class="vote-btn up ${p.user_vote === 1 ? 'voted' : ''}" data-id="${p.id}" data-val="1">▲</button>
+						<span class="vote-score">${p.score}</span>
+						<button class="vote-btn down ${p.user_vote === -1 ? 'voted' : ''}" data-id="${p.id}" data-val="-1">▼</button>
 					</div>
-					<p class="post-content-preview">${escHtml(p.content)}</p>
-					<div class="post-tags">
-						${(p.categories || []).map(c => `<span class="tag">${escHtml(c.name)}</span>`).join('')}
+					<div class="post-main">
+						<h3>${escHtml(p.title)}</h3>
+						<div class="post-meta">
+							<span>by <strong>${escHtml(p.nickname)}</strong></span>
+							<span>${fmtDate(p.created_at)}</span>
+						</div>
+						<p class="post-content-preview">${escHtml(p.content)}</p>
+						<div class="post-tags">
+							${(p.categories || []).map(c => `<span class="tag">${escHtml(c.name)}</span>`).join('')}
+						</div>
 					</div>
 				</div>
 			</li>
@@ -52,6 +59,19 @@ const Posts = (() => {
 		list.querySelectorAll('.post-card').forEach(card => {
 			card.addEventListener('click', () => {
 				App.navigate('post', { id: card.dataset.id });
+			});
+		});
+
+		list.querySelectorAll('.vote-btn').forEach(btn => {
+			btn.addEventListener('click', async (e) => {
+				e.stopPropagation();
+				const card     = btn.closest('.post-card');
+				const newScore = await _vote(btn.dataset.id, parseInt(btn.dataset.val));
+				if (newScore === null) return;
+				const wasVoted = btn.classList.contains('voted');
+				card.querySelectorAll('.vote-btn').forEach(b => b.classList.remove('voted'));
+				if (!wasVoted) btn.classList.add('voted');
+				card.querySelector('.vote-score').textContent = newScore;
 			});
 		});
 	}
@@ -84,8 +104,24 @@ const Posts = (() => {
 			<div class="post-tags">
 				${(post.categories || []).map(c => `<span class="tag">${escHtml(c.name)}</span>`).join('')}
 			</div>
+			<div class="vote-col" style="flex-direction:row; margin-top:16px; gap:8px;">
+				<button class="vote-btn up ${post.user_vote === 1 ? 'voted' : ''}" data-id="${post.id}" data-val="1">▲</button>
+				<span class="vote-score">${post.score}</span>
+				<button class="vote-btn down ${post.user_vote === -1 ? 'voted' : ''}" data-id="${post.id}" data-val="-1">▼</button>
+			</div>
 			<p class="post-body" style="margin-top:16px">${escHtml(post.content)}</p>
 		`;
+
+		detail.querySelectorAll('.vote-btn').forEach(btn => {
+			btn.addEventListener('click', async () => {
+				const newScore = await _vote(btn.dataset.id, parseInt(btn.dataset.val));
+				if (newScore === null) return;
+				const wasVoted = btn.classList.contains('voted');
+				detail.querySelectorAll('.vote-btn').forEach(b => b.classList.remove('voted'));
+				if (!wasVoted) btn.classList.add('voted');
+				detail.querySelector('.vote-score').textContent = newScore;
+			});
+		});
 
 		renderComments(post.comments || []);
 	}
@@ -188,6 +224,18 @@ const Posts = (() => {
 
 	document.getElementById('cancel-post').addEventListener('click', () => App.navigate('feed'));
 	document.getElementById('back-to-feed').addEventListener('click', () => App.navigate('feed'));
+
+	async function _vote(postID, value) {
+		try {
+			const res = await fetch(`/api/posts/${postID}/like`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ value }),
+			});
+			const data = await res.json();
+			return res.ok ? data.score : null;
+		} catch { return null; }
+	}
 
 	function escHtml(str) {
 		return String(str)

@@ -84,6 +84,15 @@ func createTables() {
 		FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
 	);
 
+	CREATE TABLE IF NOT EXISTS post_likes (
+		post_id	TEXT NOT NULL,
+		user_id	TEXT NOT NULL,
+		value	INTEGER NOT NULL CHECK(value IN (1, -1)),
+		PRIMARY KEY (post_id, user_id),
+		FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);
+
 	INSERT OR IGNORE INTO categories (name) VALUES
 		('Technology'),
 		('Gaming'),

@@ -77,7 +77,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
-	post, _ := getPostByID(id.String())
+	post, _ := getPostByID(id.String(), user.ID)
 	jsonOK(w, post)
 }
 
@@ -87,10 +87,16 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	me, _ := GetSessionUser(r)
+
 	rows, err := database.DB.Query(
-		`SELECT p.id, p.user_id, u.nickname, p.title, p.content, p.created_at
-		 FROM posts p JOIN users u ON p.user_id = u.id
+		`SELECT p.id, p.user_id, u.nickname, p.title, p.content, p.created_at,
+		        COALESCE((SELECT SUM(value) FROM post_likes WHERE post_id = p.id), 0) AS score,
+		        COALESCE((SELECT value FROM post_likes WHERE post_id = p.id AND user_id = ?), 0) AS user_vote
+		 FROM posts p
+		 JOIN users u ON p.user_id = u.id
 		 ORDER BY p.created_at DESC`,
+		me.ID,
 	)
 	if err != nil {
 		jsonError(w, "internal error", http.StatusInternalServerError)
@@ -101,7 +107,7 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 	var posts []models.Post
 	for rows.Next() {
 		var p models.Post
-		rows.Scan(&p.ID, &p.UserID, &p.Nickname, &p.Title, &p.Content, &p.CreatedAt)
+		rows.Scan(&p.ID, &p.UserID, &p.Nickname, &p.Title, &p.Content, &p.CreatedAt, &p.Score, &p.UserVote)
 		p.Categories = getPostCategories(p.ID)
 		posts = append(posts, p)
 	}
@@ -124,7 +130,8 @@ func GetPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := getPostByID(id)
+	me, _ := GetSessionUser(r)
+	post, err := getPostByID(id, me.ID)
 	if err != nil {
 		jsonError(w, "post not found", http.StatusNotFound)
 		return
@@ -187,12 +194,17 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, comment)
 }
 
-func getPostByID(id string) (models.Post, error) {
+func getPostByID(id string, userID string) (models.Post, error) {
 	var p models.Post
 	err := database.DB.QueryRow(
-		`SELECT p.id, p.user_id, u.nickname, p.title, p.content, p.created_at
-		 FROM posts p JOIN users u ON p.user_id = u.id WHERE p.id = ?`, id,
-	).Scan(&p.ID, &p.UserID, &p.Nickname, &p.Title, &p.Content, &p.CreatedAt)
+		`SELECT p.id, p.user_id, u.nickname, p.title, p.content, p.created_at,
+		        COALESCE((SELECT SUM(value) FROM post_likes WHERE post_id = p.id), 0) AS score,
+		        COALESCE((SELECT value FROM post_likes WHERE post_id = p.id AND user_id = ?), 0) AS user_vote
+		 FROM posts p
+		 JOIN users u ON p.user_id = u.id
+		 WHERE p.id = ?`,
+		userID, id,
+	).Scan(&p.ID, &p.UserID, &p.Nickname, &p.Title, &p.Content, &p.CreatedAt, &p.Score, &p.UserVote)
 	if err != nil {
 		return p, err
 	}

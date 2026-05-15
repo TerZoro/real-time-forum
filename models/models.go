@@ -34,6 +34,8 @@ type Post struct {
 	Categories []Category `json:"categories"`
 	Comments   []Comment  `json:"comments,omitempty"`
 	CreatedAt  time.Time  `json:"created_at"`
+	Score      int        `json:"score"`
+	UserVote   int        `json:"user_vote"`
 }
 
 type Comment struct {
