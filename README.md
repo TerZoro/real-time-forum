@@ -11,10 +11,12 @@ A full-stack forum with live chat, built from scratch with Go and vanilla JavaSc
 - **Post feed** — browse all posts with categories, author, and timestamp
 - **Create posts** — title, content, pick one or more categories
 - **Comments** — comment on any post
+- **Like / dislike posts** — Reddit-style vote buttons, one vote per user, toggle off by clicking again
 - **Private chat** — real-time direct messages between users
 - **Message history** — paginated, loads 10 messages at a time, scroll up to load older
 - **Online presence** — see who is online in the sidebar, live updates when users join or leave
 - **Single page app** — no full page reloads, instant navigation
+- **Responsive** — works on desktop, tablet, and mobile
 
 ---
 
@@ -41,17 +43,17 @@ real-time-forum/
 │   └── models.go            # Go structs (User, Post, Message, etc.)
 ├── handlers/
 │   ├── auth.go              # Register, Login, Logout, session middleware
-│   ├── posts.go             # Posts and comments
+│   ├── posts.go             # Posts, comments, like/dislike
 │   ├── messages.go          # Paginated message history, conversations sidebar
 │   └── websocket.go         # WebSocket hub, real-time delivery
 └── static/
     ├── index.html           # Single page shell (all views inside)
     ├── css/
-    │   └── style.css        # Dark theme layout
+    │   └── style.css        # Dark theme, responsive layout
     └── js/
-        ├── app.js           # Router, boots everything
+        ├── app.js           # Router, boots everything, mobile sidebar toggle
         ├── auth.js          # Login and register forms
-        ├── posts.js         # Feed, single post, comments, new post
+        ├── posts.js         # Feed, single post, comments, new post, voting
         ├── messages.js      # Chat, sidebar, pagination
         └── websocket.js     # WebSocket client, reconnect logic
 ```
@@ -87,11 +89,13 @@ Open [http://localhost:8080](http://localhost:8080) in your browser.
 
 The database file `forum.db` is created automatically on first run. No migrations needed.
 
+> **Note:** always use `go run .` during development, not a pre-compiled binary.
+
 ---
 
 ## API
 
-All API routes return JSON.
+All API routes return JSON. All routes except `/api/register`, `/api/login`, and `/api/me` require a valid session cookie.
 
 ### Auth
 
@@ -106,9 +110,10 @@ All API routes return JSON.
 
 | Method | Route | Description |
 |---|---|---|
-| GET | /api/posts | All posts |
+| GET | /api/posts | All posts with score and current user vote |
 | POST | /api/posts | Create post |
-| GET | /api/posts/:id | Single post with comments |
+| GET | /api/posts/:id | Single post with comments, score, and current user vote |
+| POST | /api/posts/:id/like | Like or dislike a post (`{"value": 1}` or `{"value": -1}`) |
 | POST | /api/comments | Add comment |
 | GET | /api/categories | All categories |
 
